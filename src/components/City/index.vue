@@ -85,7 +85,7 @@
 
 <script>
 export default {
-  name : 'City'
+  name : 'City',
 }
 </script>
 
