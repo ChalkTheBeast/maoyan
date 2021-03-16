@@ -1,31 +1,35 @@
 <template>
-  <div class="movie_body">
-    <ul>
-      <!-- <li>
-        <div class="pic_show"><img src="/images/movie_1.jpg"></div>
-        <div class="info_list">
-          <h2>无名之辈</h2>
-          <p>观众评 <span class="grade">9.2</span></p>
-          <p>主演: 陈建斌,任素汐,潘斌龙</p>
-          <p>今天55家影院放映607场</p>
-        </div>
-        <div class="btn_mall">
-          购票
-        </div>
-      </li> -->
-      <li v-for="item in movieList" :key="item.id">
-        <div class="pic_show"><img :src="item.img | setWH('120.180')"></div>
-        <div class="info_list">
-          <h2>{{ item.nm }} <img v-if="item.version" src="@/assets/maxs.png" alt=""></h2>
-          <p>观众评 <span class="grade">{{ item.sc }}</span></p>
-          <p>主演: {{ item.star }}</p>
-          <p>{{ item.showInfo }}</p>
-        </div>
-        <div class="btn_mall">
-          购票
-        </div>
-      </li>
-    </ul>
+  <div class="movie_body" ref="movie_body">
+    <Loading v-if="isLoading" />
+    <Scroller v-else :handleToScroll="handleToScroll" :handleToTouchEnd="handleToTouchEnd">
+      <ul>
+        <!-- <li>
+          <div class="pic_show"><img src="/images/movie_1.jpg"></div>
+          <div class="info_list">
+            <h2>无名之辈</h2>
+            <p>观众评 <span class="grade">9.2</span></p>
+            <p>主演: 陈建斌,任素汐,潘斌龙</p>
+            <p>今天55家影院放映607场</p>
+          </div>
+          <div class="btn_mall">
+            购票
+          </div>
+        </li> -->
+        <li class="pullDown">{{ pullDownMsg }}</li>
+        <li v-for="item in movieList" :key="item.id">
+          <div class="pic_show"><img :src="item.img | setWH('120.180')"></div>
+          <div class="info_list">
+            <h2>{{ item.nm }} <img v-if="item.version" src="@/assets/maxs.png" alt=""></h2>
+            <p>观众评 <span class="grade">{{ item.sc }}</span></p>
+            <p>主演: {{ item.star }}</p>
+            <p>{{ item.showInfo }}</p>
+          </div>
+          <div class="btn_mall">
+            购票
+          </div>
+        </li>
+      </ul>
+    </Scroller>
   </div>
 </template>
 
@@ -34,14 +38,44 @@ export default {
   name : 'NowPlaying',
   data(){
     return {
-      movieList : []
+      movieList : [],
+      pullDownMsg : '',
+      isLoading : true,
+      prevCityId : -1
     }
   },
-  mounted(){
-    this.axios.get('/ajax/movieOnInfoList')
+  activated(){
+    let cityId = this.$store.state.city.id
+    if(this.prevCityId === cityId){
+      return 0
+    }
+    this.isLoading = true
+
+    this.axios.get('/ajax/movieOnInfoList?cityId=' + cityId)
     .then((res)=>{
+      this.isLoading = false
       this.movieList = res.data.movieList
+      this.prevCityId = cityId
     })
+  },
+  methods : {
+    handleToScroll(pos){
+      if(pos.y > 30){
+        this.pullDownMsg = '正在更新中'
+      }
+    },
+    handleToTouchEnd(pos){
+      if(pos.y > 30){
+        this.axios.get('/ajax/movieOnInfoList')
+        .then((res)=>{
+          this.pullDownMsg = '更新成功'
+          setTimeout(() => {
+            this.movieList = res.data.movieList
+            this.pullDownMsg = ''
+          }, 1000);
+        })
+      }
+    }
   }
 }
 </script>
@@ -59,4 +93,5 @@ export default {
 .movie_body .info_list img{ width:50px; position: absolute; right:10px; top: 5px;}
 .movie_body .btn_mall , .movie_body .btn_pre{ width:47px; height:27px; line-height: 28px; text-align: center; background-color: #f03d37; color: #fff; border-radius: 4px; font-size: 12px; cursor: pointer;}
 .movie_body .btn_pre{ background-color: #3c9fe6;}
+.movie_body .pullDown{ padding: 0; margin: 0; border: none;}
 </style>
