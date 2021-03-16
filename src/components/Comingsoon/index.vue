@@ -1,20 +1,22 @@
 <template>
   <div class="movie_body">
-    <ul>
-      <li v-for="item in coming" :key="item.id">
-        <div class="pic_show"><img :src="item.img | setWH('120.180')"></div>
-        <div class="info_list">
-          <h2>{{ item.nm }} <img v-if="item.version" src="@/assets/maxs.png" alt=""></h2>
-          <p><span class="person">{{ item.wish }}</span> 人想看</p>
-          <p>主演: {{ item.star }}</p>
-          <p>{{ item.rt }}上映</p>
-        </div>
-        <div class="btn_pre">
-          预售
-        </div>
-      </li>
-      
-    </ul>
+    <Loading v-if="isLoading" />
+    <Scroller v-else>
+      <ul>
+        <li v-for="item in coming" :key="item.id">
+          <div class="pic_show"><img :src="item.img | setWH('120.180')"></div>
+          <div class="info_list">
+            <h2>{{ item.nm }} <img v-if="item.version" src="@/assets/maxs.png" alt=""></h2>
+            <p><span class="person">{{ item.wish }}</span> 人想看</p>
+            <p>主演: {{ item.star }}</p>
+            <p>{{ item.rt }}上映</p>
+          </div>
+          <div class="btn_pre">
+            预售
+          </div>
+        </li>
+      </ul>
+    </Scroller>
   </div>
 </template>
 
@@ -23,13 +25,23 @@ export default {
   name : 'ComingSoon',
   data(){
     return {
-      coming : []
+      coming : [],
+      isLoading : true,
+      prevCityId : -1
     }
   },
   mounted(){
-    this.axios.get('/ajax/comingList?ci=10&token=&limit=10')
+    let cityId = this.$store.state.city.id
+    if(this.prevCityId === cityId){
+      return 0
+    }
+    this.loading = true
+
+    this.axios.get('/ajax/comingList?token=&limit=10&cityId=' + cityId)
     .then((res)=>{
+      this.isLoading = false
       this.coming = res.data.coming
+      this.prevCityId = cityId
     })
   }
 }

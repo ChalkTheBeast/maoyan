@@ -1,97 +1,94 @@
 <template>
   <div class="cinema_body">
-    <ul>
-      <li>
-        <div>
-          <span>大地影院(澳东世纪店)</span>
-          <span class="q"><span class="price">22.9</span> 元起</span>
-        </div>
-        <div class="address">
-          <span>金州区大连经济技术开发区澳东世纪3层</span>
-          <span>1763.5km</span>
-        </div>
-        <div class="card">
-                  <div>小吃</div>
-                  <div>折扣卡</div>
-            </div>
-      </li>
-      <li>
-        <div>
-          <span>大地影院(澳东世纪店)</span>
-          <span class="q"><span class="price">22.9</span> 元起</span>
-        </div>
-        <div class="address">
-          <span>金州区大连经济技术开发区澳东世纪3层</span>
-          <span>1763.5km</span>
-        </div>
-        <div class="card">
-                  <div>小吃</div>
-                  <div>折扣卡</div>
-            </div>
-      </li>
-      <li>
-        <div>
-          <span>大地影院(澳东世纪店)</span>
-          <span class="q"><span class="price">22.9</span> 元起</span>
-        </div>
-        <div class="address">
-          <span>金州区大连经济技术开发区澳东世纪3层</span>
-          <span>1763.5km</span>
-        </div>
-        <div class="card">
-                  <div>小吃</div>
-                  <div>折扣卡</div>
-            </div>
-      </li>
-      <li>
-        <div>
-          <span>大地影院(澳东世纪店)</span>
-          <span class="q"><span class="price">22.9</span> 元起</span>
-        </div>
-        <div class="address">
-          <span>金州区大连经济技术开发区澳东世纪3层</span>
-          <span>1763.5km</span>
-        </div>
-        <div class="card">
-                  <div>小吃</div>
-                  <div>折扣卡</div>
-            </div>
-      </li>
-      <li>
-        <div>
-          <span>大地影院(澳东世纪店)</span>
-          <span class="q"><span class="price">22.9</span> 元起</span>
-        </div>
-        <div class="address">
-          <span>金州区大连经济技术开发区澳东世纪3层</span>
-          <span>1763.5km</span>
-        </div>
-        <div class="card">
-                  <div>小吃</div>
-                  <div>折扣卡</div>
-            </div>
-      </li>
-      <li>
-        <div>
-          <span>大地影院(澳东世纪店)</span>
-          <span class="q"><span class="price">22.9</span> 元起</span>
-        </div>
-        <div class="address">
-          <span>金州区大连经济技术开发区澳东世纪3层</span>
-          <span>1763.5km</span>
-        </div>
-        <div class="card">
-                  <div>小吃</div>
-                  <div>折扣卡</div>
-            </div>
-      </li>
-    </ul>
+    <Loading v-if="isLoading" />
+    <Scroller v-else>
+      <ul>
+        <!-- <li>
+          <div>
+            <span>大地影院(澳东世纪店)</span>
+            <span class="q"><span class="price">22.9</span> 元起</span>
+          </div>
+          <div class="address">
+            <span>金州区大连经济技术开发区澳东世纪3层</span>
+            <span>1763.5km</span>
+          </div>
+          <div class="card">
+                    <div>小吃</div>
+                    <div>折扣卡</div>
+              </div>
+        </li> -->
+        <li v-for="item in cinemaList" :key="item.id">
+          <div>
+            <span>{{ item.nm }}</span>
+            <span class="q"><span class="price"> {{ item.sellPrice }}</span> 元起</span>
+          </div>
+          <div class="address">
+            <span>{{ item.addr }}</span>
+            <span>{{ item.distance }}</span>
+          </div>
+          <div class="card">
+            <div v-for="(num, key) in item.tag" v-if="num===1" :key="key" :class="key | classCard">{{ key | formatCard }}</div>
+          </div>
+        </li>
+      </ul>
+    </Scroller>
   </div>
 </template>
 
 <script>
 export default {
-  name : 'CinemaList'
+  name : 'CinemaList',
+  data(){
+    return {
+      cinemaList : [],
+      isLoading : true,
+      prevCityId : -1
+    }
+  },
+  activated(){
+    let cityId = this.$store.state.city.id
+    if(this.prevCityId === cityId){
+      return 0
+    }
+    this.isLoading = true
+
+    this.axios.get('/ajax/cinemaList?cityId' + cityId)
+    .then((res)=>{
+      this.isLoading = false
+      this.cinemaList = res.data.cinemas
+      this.prevCityId = cityId
+    })
+  },
+  filters : {
+    formatCard(key){
+      let card = [
+        { key : 'endorse', value : '退' },
+        { key : 'allowRefund', value : '改签' },
+        { key : 'snack', value : '小吃' },
+        { key : 'sell', value : '折扣卡' }
+      ]
+      for(let i = 0; i < card.length; i++){
+        if(card[i].key === key){
+          return card[i].value
+        }
+      }
+      return ''
+    },
+    classCard(key){
+      let card = [
+        { key : 'endorse', value : 'bl' },
+        { key : 'allowRefund', value : 'bl' },
+        { key : 'snack', value : 'or' },
+        { key : 'sell', value : 'or' }
+      ]
+      for(let i = 0; i < card.length; i++){
+        if(card[i].key === key){
+          return card[i].value
+        }
+      }
+      return ''
+    }
+  }
 }
 </script>
 

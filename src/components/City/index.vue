@@ -1,6 +1,6 @@
 <template>
   <div class="city_body">
-    <div class="city_list">
+    <!-- <div class="city_list">
       <div class="city_hot">
         <h2>热门城市</h2>
         <ul class="clearfix">
@@ -24,54 +24,8 @@
             <li>安阳</li>
           </ul>
         </div>
-        <div>
-          <h2>B</h2>
-          <ul>
-            <li>北京</li>
-            <li>保定</li>
-            <li>蚌埠</li>
-            <li>包头</li>
-          </ul>
-        </div>
-        <div>
-          <h2>A</h2>
-          <ul>
-            <li>阿拉善盟</li>
-            <li>鞍山</li>
-            <li>安庆</li>
-            <li>安阳</li>
-          </ul>
-        </div>
-        <div>
-          <h2>B</h2>
-          <ul>
-            <li>北京</li>
-            <li>保定</li>
-            <li>蚌埠</li>
-            <li>包头</li>
-          </ul>
-        </div>
-        <div>
-          <h2>A</h2>
-          <ul>
-            <li>阿拉善盟</li>
-            <li>鞍山</li>
-            <li>安庆</li>
-            <li>安阳</li>
-          </ul>
-        </div>
-        <div>
-          <h2>B</h2>
-          <ul>
-            <li>北京</li>
-            <li>保定</li>
-            <li>蚌埠</li>
-            <li>包头</li>
-          </ul>
-        </div>	
       </div>
-    </div>
-    <div class="city_index">
+      <div class="city_index">
       <ul>
         <li>A</li>
         <li>B</li>
@@ -80,12 +34,119 @@
         <li>E</li>
       </ul>
     </div>
+    </div> -->
+    <div class="city_list">
+      <Loading v-if="isLoading" />
+      <Scroller v-else ref="city_List">
+        <div>
+          <div class="city_hot">
+            <h2>热门城市</h2>
+            <ul class="clearfix">
+              <li v-for="item in hotList" :key="item.id" @tap="handleToCity(item.nm, item.id)">{{ item.nm }}</li>
+            </ul>
+          </div>
+          <div class="city_sort" ref="city_sort">
+            <div v-for="item in cityList" :key="item.index">
+              <h2>{{ item.index }}</h2>
+              <ul>
+                <li v-for="itemList in item.list" :key="itemList.id" @tap="handleToCity(itemList.nm, itemList.id)">{{ itemList.nm }}</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </Scroller>
+    </div>
+    <div class="city_index">
+      <ul>
+        <li v-for="(item, index) in cityList" :key="item.index" @touchstart="handleToScroll(index)">{{ item.index }}</li>
+      </ul>
+    </div>
+  
   </div>
 </template>
 
 <script>
 export default {
   name : 'City',
+  data(){
+    return {
+      cityList : [],
+      hotList : [],
+      isLoading : true
+    }
+  },
+  mounted(){
+    let cityList = window.localStorage.getItem('cityList')
+    let hotList = window.localStorage.getItem('hotList')
+    if(cityList && hotList){
+      this.isLoading = false
+      this.cityList = JSON.parse(cityList)
+      this.hotList = JSON.parse(hotList)
+    }else{
+      this.axios.get('/cityList.json')
+      .then((res)=>{
+        this.isLoading = false
+        let cities = res.data.letterMap.cityList
+        let { cityList, hotList } = this.formatCityList(cities)
+        this.cityList = cityList
+        this.hotList = hotList
+        window.localStorage.setItem('cityList', JSON.stringify(cityList))
+        window.localStorage.setItem('hotList', JSON.stringify(hotList))
+    })
+    }
+    
+  },
+  methods : {
+    formatCityList(cities){
+      let cityList = [] //城市列表
+      let hotList = [] //热门城市
+
+      for(let i = 0; i < cities.length; i++){
+        if(cities[i].rank == 'S' || cities[i].rank == "A"){
+          hotList.push({ nm : cities[i].nm , id : cities[i].id })
+        }
+      }
+
+      for(let i = 0; i < cities.length; i++){
+        let firstLetter = cities[i].py.substring(0, 1).toUpperCase()
+        if(toCom(firstLetter)){
+          // 没有首字母就新增
+          cityList.push({ index : firstLetter , list : [ { nm : cities[i].nm , id : cities[i].id } ] })
+        }else{
+          // 有首字母就添加
+          for(let j = 0; j < cityList.length; j++){
+            if(cityList[j].index === firstLetter){
+              cityList[j].list.push({ nm : cities[i].nm , id : cities[i].id })
+            }
+          }
+        }
+      }
+
+      function toCom(firstLetter){
+        for(let i = 0; i < cityList.length; i++){
+          if(cityList[i].index == firstLetter){
+            return false
+          }
+        }
+        return true
+      }
+
+      return {
+        cityList,
+        hotList
+      }
+    },
+    handleToScroll(index){
+      let h2 = this.$refs.city_sort.getElementsByTagName('h2')
+      this.$refs.city_List.toScrollTop(-h2[index].offsetTop)
+    },
+    handleToCity(nm, id){
+      this.$store.commit('city/CITY_INFO', { nm, id })
+      window.localStorage.setItem('nm', nm)
+      window.localStorage.setItem('id', id)
+      this.$router.push('movie/nowPlaying')
+    }
+  }
 }
 </script>
 
