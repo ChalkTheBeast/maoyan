@@ -48,7 +48,7 @@ export default {
   activated(){
     let cityId = this.$store.state.city.id
     if(this.prevCityId === cityId){
-      return 0
+      return;
     }
     this.isLoading = true
 

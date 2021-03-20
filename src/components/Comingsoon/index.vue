@@ -33,7 +33,7 @@ export default {
   mounted(){
     let cityId = this.$store.state.city.id
     if(this.prevCityId === cityId){
-      return 0
+      return;
     }
     this.loading = true
 
